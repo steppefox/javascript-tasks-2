@@ -12,13 +12,15 @@ function validate(input, type) {
     var ret = true;
     switch (type) {
         case 'email':
-            // https://regex101.com/r/xT5vS8/1
+            // https://regex101.com/r/xT5vS8/2
             var expr = new RegExp('^[a-z][а-яA-Za-z\-0-9\.\_]{0,50}' +
                 '@(([а-я\-]+(\.[а-я]{2,4}){1,3})|([a-z\-]+(\.[a-z]{2,4}){1,3}))$', 'ig');
             ret = expr.exec(input) ? true : false;
             break;
         case 'name':
-
+            if (!input) {
+                ret = false;
+            }
             break;
         case 'phone':
             // https://regex101.com/r/dG3iO6/1
@@ -28,6 +30,29 @@ function validate(input, type) {
         default:
             ret = false;
             break;
+    }
+
+    return ret;
+}
+
+function formatPhone(input) {
+    var ret ='';
+    var expr = /^(\+?\d{1,2})?\s?((\(\d{3}\))|(\d{3}))\s?(\d{3})(\s|-)?(\d)(\s|-)?(\d{3})$/ig;
+    // Результат EXPR
+    // ["+7 (111) 777-2-222", "+7", "(111)", "(111)", undefined, "777", "-", "2", "-", "222", index: 0, input: "+7 (111) 777-2-222"]
+    var group = expr.exec(input);
+    if (group) {
+        // +7 (321) 777-2-222 - необходимый формат
+        if (group[1]) {
+            if (group[1].indexOf('+')==-1) {
+                ret += '+' + group[1];
+            } else {
+                ret += group[1];
+            }
+        } else {
+            ret += '+7';
+        }
+        ret += ' '+(typeof group[4] === 'undefined' ? group[3] : '('+group[4]+')')+' '+group[5]+'-'+group[7]+'-'+group[9];
     }
 
     return ret;
@@ -63,7 +88,8 @@ module.exports.add = function add(name, phone, email) {
  * @return {bool}
  */
 function checkPhoneRecord(item, query) {
-    if (item.name.indexOf(query) != -1 ||
+    if (!query ||
+        item.name.indexOf(query) != -1 ||
         item.phone.indexOf(query) != -1 ||
         item.email.indexOf(query) != -1) {
         return true;
@@ -91,7 +117,7 @@ module.exports.find = function find(query) {
     if (ret.length > 0) {
         console.log('Найденных результатов - ' + ret.length + ':');
         for (var i in ret) {
-            console.log(ret[i].name + ', ' + ret[i].phone + ', ' + ret[i].email);
+            console.log(ret[i].name + ', ' + formatPhone(ret[i].phone) + ', ' + ret[i].email);
         }
     } else {
         console.log('Ничего не найдено D;');
@@ -313,7 +339,7 @@ module.exports.showTable = function showTable() {
     };
     for (var i in phoneBook) {
         columnsData.names.push(phoneBook[i].name);
-        columnsData.phones.push(phoneBook[i].phone);
+        columnsData.phones.push(formatPhone(phoneBook[i].phone));
         columnsData.emails.push(phoneBook[i].email);
     }
 
