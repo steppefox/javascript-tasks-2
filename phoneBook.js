@@ -13,9 +13,8 @@ function validate(input, type) {
     switch (type) {
         case 'email':
             // https://regex101.com/r/xT5vS8/2
-            var expr = new RegExp('^[a-z][а-яA-Za-z\-0-9\.\_]{0,50}' +
-                '@(([а-я\-]+(\.[а-я]{2,4}){1,3})|([a-z\-]+(\.[a-z]{2,4}){1,3}))$', 'ig');
-            ret = expr.exec(input) ? true : false;
+            var expr = /^[a-z][а-яA-Za-z\-0-9_\.]{0,50}@(([а-я][а-я\-]+(\.[а-я]{2,4}){1,3})|([a-z][a-z\-]+(\.[a-z]{2,4}){1,3}))$/;
+            ret = expr.test(input);
             break;
         case 'name':
             if (!input) {
@@ -25,7 +24,7 @@ function validate(input, type) {
         case 'phone':
             // https://regex101.com/r/dG3iO6/1
             var expr = /^(\+?\d{1,2})?\s?((\(\d{3}\))|(\d{3}))\s?\d{3}(\s|-)?\d(\s|-)?\d{3}$/ig;
-            ret = expr.exec(input) ? true : false;
+            ret = expr.test(input);
             break;
         default:
             ret = false;
@@ -36,7 +35,7 @@ function validate(input, type) {
 }
 
 function formatPhone(input) {
-    var ret ='';
+    var ret = '';
     var expr = /^(\+?\d{1,2})?\s?((\(\d{3}\))|(\d{3}))\s?(\d{3})(\s|-)?(\d)(\s|-)?(\d{3})$/ig;
     // Результат EXPR
     // ["+7 (111) 777-2-222", "+7", "(111)", "(111)", undefined, "777", "-", "2", "-", "222", index: 0, input: "+7 (111) 777-2-222"]
@@ -44,7 +43,7 @@ function formatPhone(input) {
     if (group) {
         // +7 (321) 777-2-222 - необходимый формат
         if (group[1]) {
-            if (group[1].indexOf('+')==-1) {
+            if (group[1].indexOf('+') == -1) {
                 ret += '+' + group[1];
             } else {
                 ret += group[1];
@@ -52,7 +51,9 @@ function formatPhone(input) {
         } else {
             ret += '+7';
         }
-        ret += ' '+(typeof group[4] === 'undefined' ? group[3] : '('+group[4]+')')+' '+group[5]+'-'+group[7]+'-'+group[9];
+        var cityCode = (typeof group[4] === 'undefined' ? group[3] : '(' + group[4] + ')');
+        ret += ' ' + cityCode +
+            ' ' + group[5] + '-' + group[7] + '-' + group[9];
     }
 
     return ret;
@@ -65,7 +66,6 @@ function formatPhone(input) {
 module.exports.add = function add(name, phone, email) {
 
     // Ваша невероятная магия здесь
-
     if (validate(name, 'name') && validate(phone, 'phone') && validate(email, 'email')) {
         phoneBook.push({
             name: name,
